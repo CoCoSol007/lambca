@@ -1,0 +1,24 @@
+let true = \x. \y. x
+let false = \x. \y. y
+
+let not = \p. ((p false) true)
+eval (not true)                 // false -> "\x.\y.y"
+
+let and = \p. \q. ((p q) false)
+eval ((and true) false)         // false -> "\x.\y.y"
+eval ((and true) true)          // true  -> "\x.\y.x"
+eval ((and false) true)         // false -> "\x.\y.y"
+eval ((and false) false)        // false -> "\x.\y.y"
+
+// OR = NOT ((NOT p) AND (NOT q))
+let or = \p. \q. (not ((and (not p)) (not q)))
+eval ((or true) false)          // true  -> "\x.\y.x"
+eval ((or false) false)         // false -> "\x.\y.y"   
+eval ((or true) true)           // true  -> "\x.\y.x"
+eval ((or false) true)          // true  -> "\x.\y.x"
+
+// In this representation, we can eval the OR operation
+eval or
+
+// We can also eval the (not and) operation
+eval (not and)
