@@ -15,4 +15,4 @@ let mult = \m.\n. \f. (m (n f))
 eval ((mult two) two)           // 4 -> "\f.\x.f (f (f (f x)))"
 
 let exp = \m.\n. (n m)
-eval ((exp two) three)            // 4 -> "\f.\x.f (f (f (f x)))"
+eval ((exp two) three)          // 8 -> "\f.\x.f (f (f (f (f (f (f (f (f x))))))))"
