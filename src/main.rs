@@ -1,9 +1,10 @@
-use std::fs;
+use std::{collections::HashMap, fmt::Error, fs, sync::RwLock};
 
 use chumsky::Parser;
 use lambda::cli::Cli;
 
-fn main() {
+#[tokio::main]
+async fn main() -> Result<(), ()> {
     let cli = <Cli as clap::Parser>::parse();
 
     let file_content_result = match cli {
@@ -13,12 +14,29 @@ fn main() {
 
     if let Err(error) = file_content_result {
         println!("Error: {}", error);
-        return;
+        return Err(());
     }
 
     let text = file_content_result.unwrap();
 
+    let save_lambda_term = RwLock::new(HashMap::new());
+
     let parser = lambda::parser::parser();
-    let ast = parser.parse(&text).unwrap();
-    println!("{}", ast.beta_reduction())
+    let result = parser.parse(&text);
+
+    match result.into_result() {
+        Ok(instructions) => {
+            for instruction in instructions {
+                instruction.compute(&save_lambda_term).await;
+            }
+        }
+        Err(errors) => {
+            println!("Parse errors:");
+            for error in errors {
+                println!("  {:?}", error);
+            }
+        }
+    };
+
+    Ok(())
 }

@@ -1,0 +1,19 @@
+let true = \a.\b.a
+
+let false = \a.\b.b
+
+let not = \a.((a, false), true)
+let and = \a.\b.((a,b),false)
+let or = \a.\b.(not, ((and, (not, a)), (not, b)))
+
+eval ((and, false), true)
+eval ((and, false), false)
+eval ((and, true), false)
+eval ((and, true), true)
+
+eval or
+
+eval ((or, false), true)
+eval ((or, false), false)
+eval ((or, true), false)
+eval ((or, true), true)
