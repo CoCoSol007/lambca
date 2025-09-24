@@ -1,23 +1,21 @@
-use std::{collections::HashMap, fmt::Error, fs, sync::RwLock};
+use std::{collections::HashMap, env, fs, process::exit, sync::RwLock};
 
 use chumsky::Parser;
-use lambda::cli::Cli;
 
 #[tokio::main]
-async fn main() -> Result<(), ()> {
-    let cli = <Cli as clap::Parser>::parse();
-
-    let file_content_result = match cli {
-        Cli::RunFile { path } => fs::read_to_string(path),
-        Cli::Run { expr } => Ok(expr),
+async fn main() {
+    let cli_ok = match cli() {
+        Ok(t) => t,
+        Err(e) => {
+            eprintln!("{}", e);
+            exit(1);
+        }
     };
 
-    if let Err(error) = file_content_result {
-        println!("Error: {}", error);
-        return Err(());
-    }
-
-    let text = file_content_result.unwrap();
+    let CliOk::Text(text) = cli_ok else {
+        println!("Usage: lambda <file_path> or lambda -e <expression_to_beta_reduce>");
+        exit(0);
+    };
 
     let save_lambda_term = RwLock::new(HashMap::new());
 
@@ -31,12 +29,36 @@ async fn main() -> Result<(), ()> {
             }
         }
         Err(errors) => {
-            println!("Parse errors:");
             for error in errors {
-                println!("  {:?}", error);
+                println!("Parse error: {:?}", error);
             }
         }
     };
+}
 
-    Ok(())
+pub enum CliOk {
+    Text(String),
+    Help,
+}
+
+fn cli() -> Result<CliOk, String> {
+    let mut args = env::args();
+    let Some(first) = args.nth(1) else {
+        return Err(
+            "No arguments provided. \nUsage: lambda <file_path> or lambda -e <expression_to_beta_reduce>".to_owned(),
+        );
+    };
+
+    if first == "-h" || first == "--help" {
+        return Ok(CliOk::Help);
+    } else if first == "-e" {
+        let Some(expression) = args.nth(0) else {
+            return Err("No expression provided after -e flag. \nUsage: lambda -e <expression_to_beta_reduce> \nor lambda <file_path> in order to read from a file.".to_owned());
+        };
+        return Ok(CliOk::Text(format!("eval {}", expression)));
+    } else {
+        let file_path = first;
+        let text = fs::read_to_string(&file_path).map_err(|_| "Could not read file \nUsage: lambda <file_path> or lambda -e <expression_to_beta_reduce>".to_owned())?;
+        return Ok(CliOk::Text(text));
+    }
 }
