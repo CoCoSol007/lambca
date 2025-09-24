@@ -1,7 +1,6 @@
-//! TODO
+//! A parser for a simple lambda calculus language using the `chumsky` crate.
 
-use chumsky::prelude::{any, end, just, recursive};
-use chumsky::text::newline;
+use chumsky::prelude::{any, just, recursive};
 use chumsky::{IterParser, Parser, text};
 
 use crate::{Instruction, LambdaTerm};
@@ -19,12 +18,13 @@ pub fn parser<'src>() -> impl Parser<'src, &'src str, Vec<Instruction>> {
             let lambda_abs = op("\\")
                 .ignore_then(ident)
                 .then_ignore(just("."))
+                .padded()
                 .then(expr.clone())
                 .map(|(param, body)| LambdaTerm::LambdaAbstraction(param.to_owned(), body.into()));
 
             let application = just("(")
                 .ignore_then(expr.clone())
-                .then_ignore(op(","))
+                .then_ignore(just(" ").repeated())
                 .then(expr)
                 .then_ignore(just(")"))
                 .map(|(func, arg)| LambdaTerm::Application(func.into(), arg.into()));

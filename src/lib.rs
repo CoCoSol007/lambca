@@ -1,6 +1,5 @@
 use std::{collections::HashMap, fmt::Display, sync::RwLock};
 
-pub mod cli;
 pub mod parser;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -87,7 +86,7 @@ impl Display for LambdaTerm {
                 write!(f, "λ{}.{}", param, body)
             }
             LambdaTerm::Application(func, arg) => {
-                write!(f, "({}, {})", func, arg)
+                write!(f, "({} {})", func, arg)
             }
         }
     }
