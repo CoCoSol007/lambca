@@ -6,5 +6,5 @@ fn main() {
 
     let parser = lambda::parser::parser();
     let ast = parser.parse(&text).unwrap();
-    println!("{:?}", ast)
+    println!("{:?}", ast.beta_reduction())
 }

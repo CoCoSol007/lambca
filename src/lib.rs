@@ -1,13 +1,13 @@
 pub mod parser;
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum LambdaTerm<'src> {
-    Variable(&'src str),
-    LambdaAbstraction(&'src str, Box<LambdaTerm<'src>>),
-    Application(Box<LambdaTerm<'src>>, Box<LambdaTerm<'src>>),
+pub enum LambdaTerm {
+    Variable(String),
+    LambdaAbstraction(String, Box<LambdaTerm>),
+    Application(Box<LambdaTerm>, Box<LambdaTerm>),
 }
 
-impl<'str> LambdaTerm<'str> {
+impl LambdaTerm {
     pub fn beta_reduction(self) -> Self {
         let mut current = self;
         let mut reducted = current.clone().apply_beta_reduction(None, None);
@@ -26,19 +26,28 @@ impl<'str> LambdaTerm<'str> {
     ) -> Self {
         match self {
             LambdaTerm::Variable(v) => {
-                if let Some(lambda_term) = lambda_term
-                    && Some(v) == variable.as_deref()
-                {
-                    return lambda_term;
+                if lambda_term.is_some() {
+                    let lambda = lambda_term.unwrap();
+                    if Some(v.clone()) == variable {
+                        return lambda;
+                    }
+                    return LambdaTerm::Application(LambdaTerm::Variable(v).into(), lambda.into());
                 } else {
-                    return self;
+                    return LambdaTerm::Variable(v)
                 }
             }
-            LambdaTerm::LambdaAbstraction(_, lambda_term) => todo!(),
+            LambdaTerm::LambdaAbstraction(s, a) => {
+                if let Some(lambda_term) = lambda_term {
+                    return a.clone().apply_beta_reduction(Some(s), Some(lambda_term));
+                } else {
+                    return LambdaTerm::LambdaAbstraction(s,a);
+                }
+            },
             LambdaTerm::Application(a, b) => {
                 if lambda_term.is_none() {
-                    a.apply_beta_reduction(None, Some(*b))
+                    return a.clone().apply_beta_reduction(None, Some(*b))
                 } else {
+                    return LambdaTerm::Application(a,b);
                 }
             }
         }
