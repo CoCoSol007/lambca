@@ -1,3 +1,6 @@
+use std::fmt::Display;
+
+pub mod cli;
 pub mod parser;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -10,45 +13,72 @@ pub enum LambdaTerm {
 impl LambdaTerm {
     pub fn beta_reduction(self) -> Self {
         let mut current = self;
-        let mut reducted = current.clone().apply_beta_reduction(None, None);
-        while current != reducted {
-            current = reducted;
-            reducted = current.clone().apply_beta_reduction(None, None);
+        loop {
+            let reduced = current.clone().apply_beta_reduction();
+            if current == reduced {
+                break;
+            }
+            current = reduced;
         }
-
-        reducted
+        current
     }
 
-    fn apply_beta_reduction(
-        self,
-        variable: Option<String>,
-        lambda_term: Option<LambdaTerm>,
-    ) -> Self {
+    fn apply_beta_reduction(self) -> Self {
         match self {
-            LambdaTerm::Variable(v) => {
-                if lambda_term.is_some() {
-                    let lambda = lambda_term.unwrap();
-                    if Some(v.clone()) == variable {
-                        return lambda;
+            LambdaTerm::Variable(v) => LambdaTerm::Variable(v),
+            LambdaTerm::LambdaAbstraction(param, body) => {
+                LambdaTerm::LambdaAbstraction(param, Box::new(body.apply_beta_reduction()))
+            }
+            LambdaTerm::Application(func, arg) => {
+                let func_reduced = func.apply_beta_reduction();
+                let arg_reduced = arg.apply_beta_reduction();
+
+                match func_reduced {
+                    LambdaTerm::LambdaAbstraction(param, body) => {
+                        body.substitute(&param, &arg_reduced)
                     }
-                    return LambdaTerm::Application(LambdaTerm::Variable(v).into(), lambda.into());
-                } else {
-                    return LambdaTerm::Variable(v)
+                    _ => LambdaTerm::Application(Box::new(func_reduced), Box::new(arg_reduced)),
                 }
             }
-            LambdaTerm::LambdaAbstraction(s, a) => {
-                if let Some(lambda_term) = lambda_term {
-                    return a.clone().apply_beta_reduction(Some(s), Some(lambda_term));
+        }
+    }
+
+    fn substitute(self, var: &str, replacement: &LambdaTerm) -> Self {
+        match self {
+            LambdaTerm::Variable(v) => {
+                if v == var {
+                    replacement.clone()
                 } else {
-                    return LambdaTerm::LambdaAbstraction(s,a);
+                    LambdaTerm::Variable(v)
                 }
-            },
-            LambdaTerm::Application(a, b) => {
-                if lambda_term.is_none() {
-                    return a.clone().apply_beta_reduction(None, Some(*b))
+            }
+            LambdaTerm::LambdaAbstraction(param, body) => {
+                if param == var {
+                    LambdaTerm::LambdaAbstraction(param, body)
                 } else {
-                    return LambdaTerm::Application(a,b);
+                    LambdaTerm::LambdaAbstraction(
+                        param,
+                        Box::new(body.substitute(var, replacement)),
+                    )
                 }
+            }
+            LambdaTerm::Application(func, arg) => LambdaTerm::Application(
+                Box::new(func.substitute(var, replacement)),
+                Box::new(arg.substitute(var, replacement)),
+            ),
+        }
+    }
+}
+
+impl Display for LambdaTerm {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            LambdaTerm::Variable(name) => write!(f, "{}", name),
+            LambdaTerm::LambdaAbstraction(param, body) => {
+                write!(f, "λ{}.{}", param, body)
+            }
+            LambdaTerm::Application(func, arg) => {
+                write!(f, "({}, {})", func, arg)
             }
         }
     }
