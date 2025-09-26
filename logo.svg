@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 110 135">
+
+  
+  <g transform="translate(50,50) rotate(-12)">
+    <text x="0" y="0" text-anchor="middle" font-family="Segoe UI, Roboto, 'Helvetica Neue', Arial, sans-serif"
+          font-size="140" font-weight="800" fill="#DA5A2A" style="dominant-baseline:central;">
+      λ
+    </text>
+  </g>
+
+  <text x="50%" y="130" text-anchor="middle" font-family="Inter, Arial, sans-serif"
+        font-size="14" fill="#DA5A2A">lambda calculus</text>
+</svg>

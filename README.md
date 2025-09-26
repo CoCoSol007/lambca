@@ -1,4 +1,15 @@
-# Lambda (λ)
+<a id="readme-top"></a>
+<div align="center">
+
+</div>
+
+<!-- PROJECT LOGO -->
+<br />
+<div align="center">
+  <img src="logo.svg" width="300">
+  <p align="center">
+  </p>
+</div>
 
 **Lambda** is a very tiny [DSL](https://en.wikipedia.org/wiki/Domain-specific_language) to manipulate [lambda calculus terms](https://en.wikipedia.org/wiki/Lambda_calculus). The syntax is very simple. And the project itself is very minimalist.
 
