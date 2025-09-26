@@ -1,12 +1,14 @@
 # Lambda (λ)
 
-Lambda is a very tiny [DSL](https://en.wikipedia.org/wiki/Domain-specific_language) to manipulate [lambda calculus terms](https://en.wikipedia.org/wiki/Lambda_calculus). The syntax is very simple. And the project itself is very minimalist.
+**Lambda** is a very tiny [DSL](https://en.wikipedia.org/wiki/Domain-specific_language) to manipulate [lambda calculus terms](https://en.wikipedia.org/wiki/Lambda_calculus). The syntax is very simple. And the project itself is very minimalist.
+
+This project is a personal exploration, created with the goal of discovering and experimenting with new concepts in lambda calculus. It is not meant to be a complete implementation, but rather a minimalist playground for learning.
 
 ## Syntax
 
-- Variable: x, y, foo …
-- Abstraction: \x. M (function taking x and returning M)
-- Application: (M N) (apply function M to argument N)
+- **Variable**: x, y, foo …
+- **Abstraction**: \x. M (function taking x and returning M)
+- **Application**: (M N) (apply function M to argument N)
 
 ### Available commands:
 
