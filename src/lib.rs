@@ -1,5 +1,6 @@
 use std::{collections::HashMap, fmt::Display, sync::RwLock};
 
+pub mod lexer;
 pub mod parser;
 
 #[derive(Debug, Clone, PartialEq)]

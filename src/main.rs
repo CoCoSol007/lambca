@@ -1,6 +1,8 @@
+use ariadne::{Label, Report, ReportKind, Source};
+use chumsky::{Parser, error::Rich};
+use lambda::lexer::TokenType;
+use logos::Logos;
 use std::{collections::HashMap, env, fs, process::exit, sync::RwLock};
-
-use chumsky::Parser;
 
 #[tokio::main]
 async fn main() {
@@ -12,53 +14,86 @@ async fn main() {
         }
     };
 
-    let CliOk::Text(text) = cli_ok else {
-        println!("Usage: lambda <file_path> or lambda -e <expression_to_beta_reduce>");
+    let CliOk::Text(text, path) = cli_ok else {
+        println!("Usage: lambda <file_path>");
         exit(0);
     };
 
     let save_lambda_term = RwLock::new(HashMap::new());
 
+    let mut tokens = Vec::new();
+    let mut tokens_type = Vec::new();
+
+    for (result_token_type, span) in TokenType::lexer(&text).spanned() {
+        let Ok(token_type) = result_token_type else {
+            continue;
+        };
+        let token = lambda::lexer::Token {
+            token_type: token_type.clone(),
+            span,
+        };
+        tokens_type.push(token_type);
+        tokens.push(token);
+    }
+
     let parser = lambda::parser::parser();
-    let result = parser.parse(&text);
+    let result = parser.parse(tokens_type.as_slice());
 
     match result.into_result() {
         Ok(instructions) => {
+            Report::build(
+                ReportKind::Custom("Info", ariadne::Color::Green),
+                (&path, 0..text.len()),
+            )
+            .with_message(format!("Successfully parsed '{}'", path))
+            .finish()
+            .print((&path, Source::from(&text)))
+            .unwrap();
+
             for instruction in instructions {
                 instruction.compute(&save_lambda_term).await;
             }
         }
-        Err(errors) => {
-            for error in errors {
-                println!("Parse error: {:?}", error);
-            }
-        }
+        Err(errors) => handle_error(errors.clone(), &path, &text, &tokens),
     };
 }
 
-pub enum CliOk {
-    Text(String),
+fn handle_error(
+    errors: Vec<Rich<TokenType>>,
+    file_path: &str,
+    source: &str,
+    tokens: &Vec<lambda::lexer::Token>,
+) {
+    for e in errors {
+        let span_token_type: std::ops::Range<usize> = e.span().into_iter();
+        let span: std::ops::Range<usize> = tokens[span_token_type.start].span.clone();
+        Report::build(ReportKind::Error, (file_path, span.clone()))
+            .with_message("Parser Error")
+            .with_label(Label::new((file_path, span)).with_message(format!("{:?}", e)))
+            .finish()
+            .print((file_path, Source::from(source)))
+            .unwrap();
+    }
+    exit(1);
+}
+
+enum CliOk {
+    Text(String, String),
     Help,
 }
 
 fn cli() -> Result<CliOk, String> {
     let mut args = env::args();
     let Some(first) = args.nth(1) else {
-        return Err(
-            "No arguments provided. \nUsage: lambda <file_path> or lambda -e <expression_to_beta_reduce>".to_owned(),
-        );
+        return Err("No arguments provided. \nUsage: lambda <file_path>".to_owned());
     };
 
     if first == "-h" || first == "--help" {
         return Ok(CliOk::Help);
-    } else if first == "-e" {
-        let Some(expression) = args.nth(0) else {
-            return Err("No expression provided after -e flag. \nUsage: lambda -e <expression_to_beta_reduce> \nor lambda <file_path> in order to read from a file.".to_owned());
-        };
-        return Ok(CliOk::Text(format!("eval {}", expression)));
     } else {
         let file_path = first;
-        let text = fs::read_to_string(&file_path).map_err(|_| "Could not read file \nUsage: lambda <file_path> or lambda -e <expression_to_beta_reduce>".to_owned())?;
-        return Ok(CliOk::Text(text));
+        let text = fs::read_to_string(&file_path)
+            .map_err(|_| "Could not read file \nUsage: lambda <file_path>".to_owned())?;
+        return Ok(CliOk::Text(text, file_path));
     }
 }

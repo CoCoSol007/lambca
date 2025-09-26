@@ -1,58 +1,62 @@
 //! A parser for a simple lambda calculus language using the `chumsky` crate.
 
-use chumsky::prelude::{any, just, recursive};
-use chumsky::{IterParser, Parser, text};
-
+use crate::lexer::TokenType;
 use crate::{Instruction, LambdaTerm};
 
-pub fn parser<'src>() -> impl Parser<'src, &'src str, Vec<Instruction>> {
-    let ident = text::ascii::ident().padded();
-    let op = |c| just(c).padded();
+use chumsky::error::Rich;
+use chumsky::prelude::*;
 
-    let lambda_term = recursive(
-        |expr: chumsky::prelude::Recursive<dyn Parser<'_, &'src str, LambdaTerm>>| {
-            let variable = ident
-                .clone()
-                .map(|s: &str| LambdaTerm::Variable(s.to_owned()));
+pub fn parser<'src>()
+-> impl Parser<'src, &'src [TokenType], Vec<Instruction>, extra::Err<Rich<'src, TokenType>>> + Clone
+{
+    let ident = select! {
+        TokenType::Identifier(name) => name.to_owned(),
+    };
 
-            let lambda_abs = op("\\")
-                .ignore_then(ident)
-                .then_ignore(just("."))
-                .padded()
-                .then(expr.clone())
-                .map(|(param, body)| LambdaTerm::LambdaAbstraction(param.to_owned(), body.into()));
+    let lambda_term = recursive(|expr| {
+        let variable = ident
+            .labelled("variable identifier")
+            .map(LambdaTerm::Variable)
+            .labelled("variable");
 
-            let application = just("(")
-                .ignore_then(expr.clone())
-                .then_ignore(just(" ").repeated())
-                .then(expr)
-                .then_ignore(just(")"))
-                .map(|(func, arg)| LambdaTerm::Application(func.into(), arg.into()));
+        let lambda_abs = just(TokenType::Lambda)
+            .labelled("lambda")
+            .ignore_then(ident)
+            .labelled("parameter")
+            .then_ignore(just(TokenType::Dot).labelled("dot"))
+            .then(expr.clone())
+            .map(|(param, body)| LambdaTerm::LambdaAbstraction(param, Box::new(body)))
+            .labelled("lambda abstraction");
 
-            lambda_abs.or(application).or(variable)
-        },
-    );
+        let application = just(TokenType::LParen)
+            .ignore_then(expr.clone())
+            .then(expr)
+            .then_ignore(just(TokenType::RParen))
+            .map(|(func, arg)| LambdaTerm::Application(func.into(), arg.into()))
+            .labelled("application");
 
-    let let_term = op("let")
+        choice((lambda_abs, application, variable))
+    })
+    .labelled("lambda term");
+
+    let let_term = just(TokenType::Let)
         .ignore_then(ident)
-        .then_ignore(op("="))
+        .then_ignore(just(TokenType::Equals))
         .then(lambda_term.clone())
         .map(|(name, body)| Instruction::Let {
-            name: name.to_owned(),
+            name,
             lambda_term: body,
-        });
+        })
+        .labelled("let binding");
 
-    let eval_term = op("eval")
-        .ignore_then(lambda_term)
-        .map(|body| Instruction::Eval { lambda_term: body });
+    let eval_term = just(TokenType::Eval)
+        .ignore_then(lambda_term.clone())
+        .map(|body| Instruction::Eval { lambda_term: body })
+        .labelled("eval instruction");
 
-    let comment = just("//")
-        .then(any().and_is(just('\n').not()).repeated())
-        .padded();
-
-    (let_term.or(eval_term))
-        .padded()
-        .padded_by(comment.repeated())
-        .repeated()
+    choice((let_term, eval_term))
+        .separated_by(just(TokenType::NewLine).repeated().at_least(1))
+        .allow_leading()
+        .allow_trailing()
         .collect()
 }
