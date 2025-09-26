@@ -1,8 +1,15 @@
+//! Main program for the lambda calculus interpreter.
+
+use std::collections::HashMap;
+use std::process::exit;
+use std::sync::RwLock;
+use std::{env, fs};
+
 use ariadne::{Label, Report, ReportKind, Source};
-use chumsky::{Parser, error::Rich};
+use chumsky::Parser;
+use chumsky::error::Rich;
 use lambda::lexer::TokenType;
 use logos::Logos;
-use std::{collections::HashMap, env, fs, process::exit, sync::RwLock};
 
 #[tokio::main]
 async fn main() {
@@ -14,7 +21,7 @@ async fn main() {
         }
     };
 
-    let CliOk::Text(text, path) = cli_ok else {
+    let CliResult::Text(text, path) = cli_ok else {
         println!("Usage: lambda <file_path>");
         exit(0);
     };
@@ -58,6 +65,8 @@ async fn main() {
     };
 }
 
+/// Handle parser errors by reporting them with ariadne and exiting the
+/// program.
 fn handle_error(
     errors: Vec<Rich<TokenType>>,
     file_path: &str,
@@ -80,23 +89,29 @@ fn handle_error(
     exit(1);
 }
 
-enum CliOk {
+/// The result of the command line interface parsing.
+enum CliResult {
+    /// The text to parse and its file path.
     Text(String, String),
+
+    /// Display the help message.
     Help,
 }
 
-fn cli() -> Result<CliOk, String> {
+/// Parse the command line arguments and return the file path to parse or an
+/// error message.
+fn cli() -> Result<CliResult, String> {
     let mut args = env::args();
     let Some(first) = args.nth(1) else {
         return Err("No arguments provided. \nUsage: lambda <file_path>".to_owned());
     };
 
     if first == "-h" || first == "--help" {
-        return Ok(CliOk::Help);
+        return Ok(CliResult::Help);
     } else {
         let file_path = first;
         let text = fs::read_to_string(&file_path)
             .map_err(|_| "Could not read file \nUsage: lambda <file_path>".to_owned())?;
-        return Ok(CliOk::Text(text, file_path));
+        return Ok(CliResult::Text(text, file_path));
     }
 }

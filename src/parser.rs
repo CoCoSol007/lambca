@@ -1,11 +1,12 @@
-//! A parser for a simple lambda calculus language using the `chumsky` crate.
-
-use crate::lexer::TokenType;
-use crate::{Instruction, LambdaTerm};
+//! A parser for the lambda calculus language
 
 use chumsky::error::Rich;
 use chumsky::prelude::*;
 
+use crate::lexer::TokenType;
+use crate::{Instruction, LambdaTerm};
+
+/// A parser for the lambda calculus language.
 pub fn parser<'src>()
 -> impl Parser<'src, &'src [TokenType], Vec<Instruction>, extra::Err<Rich<'src, TokenType>>> + Clone
 {
@@ -52,7 +53,7 @@ pub fn parser<'src>()
 
     let eval_term = just(TokenType::Eval)
         .ignore_then(lambda_term.clone())
-        .map(|body| Instruction::Eval { lambda_term: body })
+        .map(|body| Instruction::Eval(body))
         .labelled("'eval' instruction");
 
     choice((let_term, eval_term))

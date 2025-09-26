@@ -1,16 +1,28 @@
-use std::{collections::HashMap, fmt::Display, sync::RwLock};
+//! All programs related to the lambda calculus language.
+
+use std::collections::HashMap;
+use std::fmt::Display;
+use std::sync::RwLock;
 
 pub mod lexer;
 pub mod parser;
 
+/// A lambda calculus term.
 #[derive(Debug, Clone, PartialEq)]
 pub enum LambdaTerm {
+    /// A variable, represented by its name.
     Variable(String),
+
+    /// A lambda abstraction, represented by its parameter and body. (\x.body)
     LambdaAbstraction(String, Box<LambdaTerm>),
+
+    /// An application, represented by its function and argument. (func arg)
     Application(Box<LambdaTerm>, Box<LambdaTerm>),
 }
 
 impl LambdaTerm {
+    /// Perform beta reduction on the lambda term until no more reductions can
+    /// be made.
     pub fn beta_reduction(self, save_lambda_term: HashMap<String, LambdaTerm>) -> Self {
         let mut current = self;
         loop {
@@ -25,6 +37,7 @@ impl LambdaTerm {
         current
     }
 
+    /// Apply a single step of beta reduction to the lambda term.
     fn apply_beta_reduction(self, save_lambda_term: HashMap<String, LambdaTerm>) -> Self {
         match self {
             LambdaTerm::Variable(v) => {
@@ -52,6 +65,8 @@ impl LambdaTerm {
         }
     }
 
+    /// Substitute all occurrences of a variable with a given lambda term.
+    /// TODO: Implement alpha conversion to avoid variable capture.
     fn substitute(self, var: &str, replacement: &LambdaTerm) -> Self {
         match self {
             LambdaTerm::Variable(v) => {
@@ -93,25 +108,36 @@ impl Display for LambdaTerm {
     }
 }
 
+/// An instruction in the lambda calculus language.
 #[derive(Debug)]
 pub enum Instruction {
+    /// Bind a name to a lambda term.
     Let {
+        /// The name to bind.
         name: String,
+
+        /// The lambda term to bind to the name.
         lambda_term: LambdaTerm,
     },
-    Eval {
-        lambda_term: LambdaTerm,
-    },
+
+    /// Evaluate the lambda term. (Evaluation is done via beta reduction and
+    /// printing the result)
+    Eval(LambdaTerm),
 }
 
 impl Instruction {
+    /// Execute the instruction, modifying the provided hashmap of saved lambda
+    /// terms as needed.
+    /// For `Let` instructions, the hashmap is updated with the new binding.
+    /// For `Eval` instructions, the lambda term is beta-reduced and printed to
+    /// the console.
     pub async fn compute(self, save_lambda_term: &RwLock<HashMap<String, LambdaTerm>>) {
         match self {
             Instruction::Let { name, lambda_term } => {
                 let mut write = save_lambda_term.write().unwrap();
                 write.insert(name, lambda_term);
             }
-            Instruction::Eval { lambda_term } => {
+            Instruction::Eval(lambda_term) => {
                 let read = save_lambda_term.read().unwrap();
                 println!("{}", lambda_term.beta_reduction(read.clone()));
             }
