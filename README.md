@@ -1,33 +1,38 @@
-# λambda
+# Lambda (λ)
 
-Lambda is a very tiny DSL to manipulate lambda terms. The syntax is very simple. And the project itself is very minimalist.
+Lambda is a very tiny [DSL](https://en.wikipedia.org/wiki/Domain-specific_language) to manipulate [lambda calculus terms](https://en.wikipedia.org/wiki/Lambda_calculus). The syntax is very simple. And the project itself is very minimalist.
 
 ## Syntax
 
-The syntax of λambda is based on the untyped lambda calculus. Here are some basic constructs:
+- Variable: x, y, foo …
+- Abstraction: \x. M (function taking x and returning M)
+- Application: (M N) (apply function M to argument N)
 
-- **Variables**: `x`, `y`, `foo`, `bar`, `val2` ...
-- **Abstraction**: `λx. M` (function that takes `x` and returns `M`)
-- **Application**: `(M N)` (apply function `M` to argument `N`)
+### Available commands:
 
-The construction of a lambda term is by combining these constructs.
-
-In order to interact with the DSL, you can use the following instructions:
-- **Define a term**: `let <name> = <lambda_term>`
-- **Evaluate a term**: `eval <lambda_term>`
-When I say "evaluate", I mean performing beta-reduction until no more reductions can be made (and print the result).
+- Define a term: let <name> = <lambda_term>
+- Evaluate a term: eval <lambda_term> (beta-reduce until no more steps & print the result)
 
 ## Examples
 
 ```plaintext
 let id = \x. x
-let const = (id id)
-eval (\y. (const y))
+eval (id z)                     // => z
+
+let self = \s. (s s)
+eval (self self)                // => (\s.(s s) \s.(s s))
+
+let k = \x.\y. x
+eval ((k a) b)                  // => a
+
+let flip = \f.\x.\y. ((f y) x)
+eval (((flip id) p) q)          // => (q p)
+
+let chain = \f.\g.\x. (f (g x))
+eval (((chain id) id) r)        // => r
 ```
 
-This will output `\y. y`.
-
-you can find more examples in the [`examples` folder](examples).
+you can find more "concrete" examples in the [`examples` folder](examples).
 
 ## Running
 
