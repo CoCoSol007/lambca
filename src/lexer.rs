@@ -1,4 +1,4 @@
-use std::ops::Range;
+use std::{fmt::Display, ops::Range};
 
 use logos::Logos;
 
@@ -38,4 +38,20 @@ pub enum TokenType {
 pub struct Token {
     pub token_type: TokenType,
     pub span: Range<usize>,
+}
+
+impl Display for TokenType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            TokenType::Dot => write!(f, "dot (.)"),
+            TokenType::Lambda => write!(f, "lambda (\\)"),
+            TokenType::LParen => write!(f, "left parenthesis '('"),
+            TokenType::RParen => write!(f, "right parenthesis ')'"),
+            TokenType::Let => write!(f, "let"),
+            TokenType::Eval => write!(f, "eval"),
+            TokenType::Equals => write!(f, "equals"),
+            TokenType::Identifier(name) => write!(f, "identifier ({})", name),
+            TokenType::NewLine => write!(f, "newline"),
+        }
+    }
 }

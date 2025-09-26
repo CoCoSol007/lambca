@@ -69,7 +69,10 @@ fn handle_error(
         let span: std::ops::Range<usize> = tokens[span_token_type.start].span.clone();
         Report::build(ReportKind::Error, (file_path, span.clone()))
             .with_message("Parser Error")
-            .with_label(Label::new((file_path, span)).with_message(format!("{:?}", e)))
+            .with_label(Label::new((file_path, span)).with_message(format!(
+                "expected {}",
+                e.expected().map(|f| f.to_string()).collect::<Vec<_>>().join(", ")
+            )))
             .finish()
             .print((file_path, Source::from(source)))
             .unwrap();

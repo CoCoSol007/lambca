@@ -9,9 +9,10 @@ use chumsky::prelude::*;
 pub fn parser<'src>()
 -> impl Parser<'src, &'src [TokenType], Vec<Instruction>, extra::Err<Rich<'src, TokenType>>> + Clone
 {
-    let ident = select! {
+    let ident = select!(
         TokenType::Identifier(name) => name.to_owned(),
-    };
+    )
+    .labelled("identifier");
 
     let lambda_term = recursive(|expr| {
         let variable = ident
@@ -47,15 +48,20 @@ pub fn parser<'src>()
             name,
             lambda_term: body,
         })
-        .labelled("let binding");
+        .labelled("'let' binding");
 
     let eval_term = just(TokenType::Eval)
         .ignore_then(lambda_term.clone())
         .map(|body| Instruction::Eval { lambda_term: body })
-        .labelled("eval instruction");
+        .labelled("'eval' instruction");
 
     choice((let_term, eval_term))
-        .separated_by(just(TokenType::NewLine).repeated().at_least(1))
+        .separated_by(
+            just(TokenType::NewLine)
+                .labelled("newline")
+                .repeated()
+                .at_least(1),
+        )
         .allow_leading()
         .allow_trailing()
         .collect()
