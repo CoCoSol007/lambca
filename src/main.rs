@@ -75,7 +75,18 @@ fn handle_error(
 ) {
     for e in errors {
         let span_token_type: std::ops::Range<usize> = e.span().into_iter();
-        let span: std::ops::Range<usize> = tokens[span_token_type.start].span.clone();
+        let span: std::ops::Range<usize> = match tokens.get(span_token_type.start) {
+            Some(t_start) => match tokens.get(span_token_type.end - 1) {
+                Some(t_end) => t_start.span.start..t_end.span.end,
+                None => t_start.span.start..t_start.span.end,
+            },
+            // We suppose that if there is no the element in the tokens vector, the error
+            // is about a missing token at the end of the vector.
+            None => tokens
+                .last()
+                .map(|t| t.span.end..(t.span.end))
+                .unwrap_or(0..0),
+        };
         Report::build(ReportKind::Error, (file_path, span.clone()))
             .with_message("Parser Error")
             .with_label(Label::new((file_path, span)).with_message(format!(
