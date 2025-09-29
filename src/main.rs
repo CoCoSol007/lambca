@@ -8,8 +8,12 @@ use std::{env, fs};
 use ariadne::{Label, Report, ReportKind, Source};
 use chumsky::Parser;
 use chumsky::error::Rich;
-use lambda::lexer::TokenType;
+use crate::lexer::TokenType;
 use logos::Logos;
+
+mod lexer;
+mod parser;
+mod algo;
 
 #[tokio::main]
 async fn main() {
@@ -35,7 +39,7 @@ async fn main() {
         let Ok(token_type) = result_token_type else {
             continue;
         };
-        let token = lambda::lexer::Token {
+        let token = crate::lexer::Token {
             token_type: token_type.clone(),
             span,
         };
@@ -43,7 +47,7 @@ async fn main() {
         tokens.push(token);
     }
 
-    let parser = lambda::parser::parser();
+    let parser = crate::parser::parser();
     let result = parser.parse(tokens_type.as_slice());
 
     match result.into_result() {
@@ -71,7 +75,7 @@ fn handle_error(
     errors: Vec<Rich<TokenType>>,
     file_path: &str,
     source: &str,
-    tokens: &Vec<lambda::lexer::Token>,
+    tokens: &Vec<crate::lexer::Token>,
 ) {
     for e in errors {
         let span_token_type: std::ops::Range<usize> = e.span().into_iter();

@@ -4,7 +4,7 @@ use chumsky::error::Rich;
 use chumsky::prelude::*;
 
 use crate::lexer::TokenType;
-use crate::{Instruction, LambdaTerm};
+use crate::algo::{Instruction, LambdaTerm};
 
 /// A parser for the lambda calculus language.
 pub fn parser<'src>()

@@ -4,9 +4,6 @@ use std::collections::HashMap;
 use std::fmt::Display;
 use std::sync::RwLock;
 
-pub mod lexer;
-pub mod parser;
-
 /// A lambda calculus term.
 #[derive(Debug, Clone, PartialEq)]
 pub enum LambdaTerm {

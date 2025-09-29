@@ -6,7 +6,7 @@
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
-  <img src="logo.svg" width="300">
+  <img src="https://raw.githubusercontent.com/CoCoSol007/lambda/main/logo.png" width="300">
   <p align="center">
   </p>
 </div>
