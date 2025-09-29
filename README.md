@@ -11,7 +11,7 @@
   </p>
 </div>
 
-**Lambda** is a very tiny [DSL](https://en.wikipedia.org/wiki/Domain-specific_language) to manipulate [lambda calculus terms](https://en.wikipedia.org/wiki/Lambda_calculus). The syntax is very simple. And the project itself is very minimalist.
+**Lambca** (**Lamb**da **ca**lculus) is a very tiny [DSL](https://en.wikipedia.org/wiki/Domain-specific_language) to manipulate [lambda calculus terms](https://en.wikipedia.org/wiki/Lambda_calculus). The syntax is very simple. And the project itself is very minimalist.
 
 This project is a personal exploration, created with the goal of discovering and experimenting with new concepts in lambda calculus. It is not meant to be a complete implementation, but rather a minimalist playground for learning.
 
@@ -49,8 +49,7 @@ you can find more "concrete" examples in the [`examples` folder](examples).
 
 ## Running
 
-todo
+You simply need to run `lambca <FilePath>`
 
 ## Installation
-
-todo
+If you have cargo installed, you can run `cargo install lambca`. Otherwise, you can install the binary file from the [releases](https://github.com/CoCoSol007/lambda/releases) page.

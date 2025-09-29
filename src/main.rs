@@ -26,7 +26,7 @@ async fn main() {
     };
 
     let CliResult::Text(text, path) = cli_ok else {
-        println!("Usage: lambda <file_path>");
+        println!("Usage: lambca <file_path>");
         exit(0);
     };
 
@@ -118,7 +118,7 @@ enum CliResult {
 fn cli() -> Result<CliResult, String> {
     let mut args = env::args();
     let Some(first) = args.nth(1) else {
-        return Err("No arguments provided. \nUsage: lambda <file_path>".to_owned());
+        return Err("No arguments provided. \nUsage: lambca <file_path>".to_owned());
     };
 
     if first == "-h" || first == "--help" {
@@ -126,7 +126,7 @@ fn cli() -> Result<CliResult, String> {
     } else {
         let file_path = first;
         let text = fs::read_to_string(&file_path)
-            .map_err(|_| "Could not read file \nUsage: lambda <file_path>".to_owned())?;
+            .map_err(|_| "Could not read file \nUsage: lambca <file_path>".to_owned())?;
         return Ok(CliResult::Text(text, file_path));
     }
 }
