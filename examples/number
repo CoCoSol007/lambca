@@ -16,3 +16,17 @@ eval ((mult two) two)           // 4 -> "\f.\x.f (f (f (f x)))"
 
 let exp = \m.\n. (n m)
 eval ((exp two) three)          // 8 -> "\f.\x.f (f (f (f (f (f (f (f (f x))))))))"
+
+let pred = \n.\a.\b. (((n \g.\h.(h (g a))) \u.b) \u.u)
+let sub = \m.\n. ((n pred) m)
+
+let w = \x.\y.(y ((x x) y))
+let omega = (w w)
+
+let true = \x.\y.x
+let false = \x.\y.y
+let iszero = \n.((n \x.false) true)
+
+let fac = \f.\x.(((iszero x) one) ((mult x) (f (pred x))))
+let factorial = (omega fac)
+eval (factorial three)
