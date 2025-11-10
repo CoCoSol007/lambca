@@ -1,0 +1,17 @@
+let I = \x.x
+let K = \x. \y. x
+let S = \x. \y. \z. ((x z) (y z))
+
+let U = (((S I) I) a)
+eval U
+
+eval (U U)
+
+let R = ((S (K (S I))) K)
+eval R
+eval ((R a) b)
+
+eval (((S K) I ) ((K I) S))
+
+let T = K
+let F = (S K)
